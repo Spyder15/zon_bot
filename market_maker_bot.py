@@ -2628,12 +2628,6 @@
 
 
 
-
-
-
-
-
-
 import time
 import ccxt
 from decimal import Decimal
@@ -2646,6 +2640,8 @@ PAIR_USDT = "ZON/USDT"
 SELL_WALL_THRESHOLD_MULTIPLIER = Decimal("2")  # Sell wall threshold multiplier
 ADJUSTMENT_PERCENTAGE = Decimal("0.005")  # 0.5% below sell wall
 RESERVE_THRESHOLD = Decimal("30.00")  # Minimum USDT reserve
+SELL_WALL_THRESHOLD_MULTIPLIER = Decimal("2")  # Sell wall threshold multiplier
+AVERAGE_ORDER_SIZE = Decimal("500")  # Average order size in ZON
 TRADE_LIMIT = Decimal("1.30")  # Max trade size in USDT or ZON
 RETRY_DELAY = 5  # Delay in seconds between cycles
 
@@ -2681,10 +2677,9 @@ def detect_sell_wall(order_book, threshold_multiplier=2):
     Returns:
         Sell wall price if detected, None otherwise.
     """
-    average_order_size = sum([order[1] for order in order_book]) / len(order_book)
-    for sell_order in order_book:
+    for sell_order in order_book:  # Corrected indentation
         price, quantity = sell_order
-        if Decimal(quantity) > Decimal(average_order_size) * Decimal(threshold_multiplier):
+        if Decimal(quantity) > AVERAGE_ORDER_SIZE * Decimal(threshold_multiplier):
             return Decimal(price)
     return None
 
@@ -2764,9 +2759,12 @@ def main():
             # Calculate trade amount based on available balance
             trade_amount = min(TRADE_LIMIT / adjusted_buy_price, usdt_balance / adjusted_buy_price)
 
-            # Place sell order below the sell wall if detected
+            # Place sell order only if sell wall is detected and below the sell wall
             if sell_wall_price:
-                place_limit_order("sell", PAIR_USDT, sell_wall_price * (1 - ADJUSTMENT_PERCENTAGE), trade_amount)
+                adjusted_sell_price = sell_wall_price * (1 - ADJUSTMENT_PERCENTAGE)
+                if adjusted_sell_price < current_price:
+                    place_limit_order("sell", PAIR_USDT, adjusted_sell_price, trade_amount)
+                    print(f"Placed sell order below the detected wall at {adjusted_sell_price:.4f} USDT")
 
             # Place buy order below the adjusted price
             place_limit_order("buy", PAIR_USDT, adjusted_buy_price, trade_amount)
