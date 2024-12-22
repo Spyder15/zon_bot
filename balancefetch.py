@@ -117,7 +117,7 @@
 # EXCHANGE = "bitrue"
 # PAIR_USDT = "ZON/USDT"
 # BUY_SPREAD = [Decimal("0.01"), Decimal("0.02")]  # 1% and 2% below market price
-# TRADE_AMOUNT_USDT = Decimal("30.00")  # Fixed trade size of $10
+# TRADE_AMOUNT_USDT = Decimal("10.00")  # Fixed trade size of $10
 # RETRY_DELAY = 5  # Delay in seconds between cycles
 
 # # Initialize exchange

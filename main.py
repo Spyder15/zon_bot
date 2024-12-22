@@ -11,8 +11,8 @@ BUY_SPREAD = [Decimal("0.01"), Decimal("0.02")]  # 1% and 2% below market price
 SELL_SPREAD = [Decimal("0.005"), Decimal("0.01")]  # 0.5% and 1% above market price
 MIN_PRICE_THRESHOLD = Decimal("0.005")
 HIGH_PRICE_THRESHOLD = Decimal("0.008")
-RETRY_DELAY = 5  # Delay in seconds between cycles
-RESERVE_THRESHOLD = Decimal("10.00")  # Reserve USDT threshold
+RETRY_DELAY = 5  # Delay in seconds between cycles                
+RESERVE_THRESHOLD = Decimal("3.00")  # Reserve USDT threshold                                 // isme 10 tha 3 lki jgh 
 MAX_TRADE_AMOUNT = Decimal("1.30")  # Max trade size in USDT
 TRADE_LIMIT = Decimal("1.30")  # Max trade size in USDT or ZON
 
