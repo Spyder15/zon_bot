@@ -165,18 +165,4 @@ def main():
             current_price = fetch_price(PAIR_USDT)
             print(f"Current price of {PAIR_USDT}: {current_price:.4f} USDT")
 
-            # Place buy orders with spread
-            for spread in BUY_SPREAD:
-                buy_price = current_price * (1 - spread)
-                buy_amount = TRADE_AMOUNT_USDT / buy_price
-                place_limit_order("buy", PAIR_USDT, buy_price, buy_amount)
 
-            # Delay before the next iteration
-            time.sleep(RETRY_DELAY)
-
-        except Exception as e:
-            print(f"Error: {e}")
-            time.sleep(RETRY_DELAY)
-
-if __name__ == "__main__":
-    main()
