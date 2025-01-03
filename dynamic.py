@@ -10,6 +10,7 @@ PAIR_USDT = "ZON/USDT"
 BUY_SPREAD = [Decimal("0.01"), Decimal("0.02")]  # 1% and 2% below market price
 SELL_SPREAD = [Decimal("0.005"), Decimal("0.01")]  # 0.5% and 1% above market price
 MIN_PRICE_THRESHOLD = Decimal("0.0015")
+
 HIGH_PRICE_THRESHOLD = Decimal("0.008")
 RETRY_DELAY = 5  # Delay in seconds between cycles
 RESERVE_THRESHOLD = Decimal("10.00")  # Reserve USDT threshold
