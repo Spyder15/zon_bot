@@ -14,7 +14,7 @@ PAIR_USDT = "ZON/USDT"
 BUY_SPREAD = [Decimal("0.01"), Decimal("0.02")]  # 1% and 2% below market price
 RETRY_DELAY = 5  # Delay in seconds between cycles
 RESERVE_THRESHOLD = Decimal("10.00")  # Reserve USDT threshold
-MAX_TRADE_AMOUNT = Decimal("50.30")  # Max trade size in USDT
+MAX_TRADE_AMOUNT = Decimal("100.00")  # Max trade size in USDT
 
 # Initialize exchange
 bitrue = ccxt.bitrue({
