@@ -9,12 +9,12 @@ EXCHANGE = "bitrue"
 PAIR_USDT = "ZON/USDT"
 PAIR_XDC = "ZON/XDC"
 BUY_SPREAD = [Decimal("0.01"), Decimal("0.02")]  # 1% and 2% below market price
-SELL_SPREAD = [Decimal("0.005"), Decimal("0.01")]  # 0.5% and 1% above market price
+SELL_SPREAD = [Decimal("0.03"), Decimal("0.02")]  # 0.5% and 1% above market price
 MIN_PRICE_THRESHOLD = Decimal("0.005")
 HIGH_PRICE_THRESHOLD = Decimal("0.008")
 SELL_WALL_THRESHOLD = 0.03  # Sell wall detection within 3%
 RESERVE_THRESHOLD = Decimal("3.00")  # Minimum reserve in USDT
-TRADE_LIMIT = Decimal("50.00")  # Max trade size
+TRADE_LIMIT = Decimal("100.00")  # Max trade size
 RETRY_DELAY = 5  # Seconds between retries
 
 # Initialize exchange
