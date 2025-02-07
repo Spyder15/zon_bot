@@ -14,8 +14,8 @@ MIN_PRICE_THRESHOLD = Decimal("0.005")
 HIGH_PRICE_THRESHOLD = Decimal("0.008")
 SELL_WALL_THRESHOLD = 0.03  # Sell wall detection within 3%
 RESERVE_THRESHOLD = Decimal("3.00")  # Minimum reserve in USDT
-TRADE_LIMIT = Decimal("100.00")  # Max trade size
-RETRY_DELAY = 5  # Seconds between retries
+TRADE_LIMIT = Decimal("50.00")  # Max trade size
+RETRY_DELAY = 5  # Seconds between retries``
 
 # Initialize exchange
 bitrue = ccxt.bitrue({
@@ -87,7 +87,7 @@ def arbitrage_opportunity(pair1, pair2, implied_price):
     diff = abs(price1 - price2)
     if diff > price1 * Decimal("0.005"):  # Arbitrage threshold: 0.5%
         print(f"Arbitrage opportunity detected! {pair1}: {price1}, {pair2}: {price2}.")
-        return price1, price2
+        return price1, price2 
     return None, None
 
 def execute_cycle(cycle, current_price, usdt_balance):
