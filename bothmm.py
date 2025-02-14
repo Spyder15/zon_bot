@@ -12,7 +12,7 @@ API_SECRET_2 = "90eefc78e753a738d8477dd2e48ba82582dd8d91354feadc75b94f0d899d1093
 
 EXCHANGE = "bitrue"
 PAIR = "ZON/USDT"
-TRADE_AMOUNT = Decimal("100.00")  # Adjust trade size as needed
+TRADE_AMOUNT = Decimal("5.00")  # Adjust trade size as needed
 MIN_TRADE_VALUE = Decimal("1.0000")  # Bitrue's minimum order value in USDT
 SLEEP_TIME = 2  # Delay between order cycles
 
