@@ -1,20 +1,14 @@
-
-
-
-
 import time
 import ccxt
 from decimal import Decimal
 
 # Configuration
-API_KEY = "00907e9d4ece06857597fcae91d54b833fd0238a8bbf56207b47f67876606629"
-API_SECRET = "50fc7a48ba34cca68972de37bc45ac892b3abba97e34c74b4e2167fd45b70f8f"
+API_KEY = "cc2c9d8f7883be5a649d62ab8431fddf5bfb023956ec42eaa5cb133d6f85af9b"
+API_SECRET = "90eefc78e753a738d8477dd2e48ba82582dd8d91354feadc75b94f0d899d1093"
 EXCHANGE = "bitrue"
 PAIR_USDT = "ZON/USDT"
-BUY_SPREAD = [Decimal("0.01"), Decimal("0.02")]  # 1% and 2% below market price
-RETRY_DELAY = 5  # Delay in seconds between cycles
-RESERVE_THRESHOLD = Decimal("10.00")  # Reserve USDT threshold
-MAX_TRADE_AMOUNT = Decimal("100.00")  # Max trade size in USDT
+TRADE_SIZE_USDT = Decimal("100.00")  # $100 per trade
+RETRY_DELAY = 2  # 2-second delay between trades
 
 # Initialize exchange
 bitrue = ccxt.bitrue({
@@ -22,148 +16,71 @@ bitrue = ccxt.bitrue({
     "secret": API_SECRET,
 })
 
-def fetch_price(pair):
-    """Fetch the current price of the pair."""
-    ticker = bitrue.fetch_ticker(pair)
-    return Decimal(str(ticker["last"]))
+def fetch_price():
+    """Fetch current market price of ZON/USDT."""
+    try:
+        ticker = bitrue.fetch_ticker(PAIR_USDT)
+        return Decimal(str(ticker["last"]))
+    except Exception as e:
+        print(f"❌ Error fetching price: {e}")
+        return None
 
 def fetch_balance(currency):
-    """Fetch the balance of the specified currency."""
-    balance = bitrue.fetch_balance()
-    return Decimal(str(balance["free"][currency]))
-
-def place_limit_order(order_type, pair, price, amount):
-    """Place a limit order (buy only)."""
-    if amount < Decimal("0.0001"):
-        print("Amount too small, skipping order.")
-        return
+    """Fetch balance of a specific currency with error handling."""
     try:
-        if order_type == "buy":
-            bitrue.create_limit_buy_order(pair, float(amount), float(price))
-            print(f"Buy order placed: {amount} ZON at {price:.4f} USDT")
+        balance = bitrue.fetch_balance()
+        return Decimal(str(balance["free"].get(currency, 0)))
     except Exception as e:
-        print(f"Error placing {order_type} order: {e}")
+        print(f"❌ Error fetching balance for {currency}: {e}")
+        return Decimal("0")
 
-def place_market_order(order_type, pair, amount):
-    """Place a market order (buy only)."""
+def cancel_all_orders():
+    """Cancel all open orders before trading."""
     try:
-        if order_type == "buy":
-            bitrue.create_market_buy_order(pair, float(amount))
-            print(f"Market buy order executed: {amount} ZON")
+        open_orders = bitrue.fetch_open_orders(PAIR_USDT)
+        for order in open_orders:
+            order_id = order["id"]
+            bitrue.cancel_order(order_id, PAIR_USDT)
+            print(f"🚀 Canceled Order ID: {order_id}")
     except Exception as e:
-        print(f"Error placing market {order_type} order: {e}")
+        print(f"❌ Error canceling orders: {e}")
 
-def execute_buy_strategy(current_price, usdt_balance):
-    """Execute the buy strategy to push the price up."""
-    print("Executing Buy Strategy")
+def place_market_buy():
+    """Place a market buy order for $100 worth of ZON."""
+    usdt_balance = fetch_balance("USDT")
+    if usdt_balance < TRADE_SIZE_USDT:
+        print(f"❌ Insufficient USDT balance ({usdt_balance}), stopping bot.")
+        return False
 
-    # Calculate trade amount based on available balance
-    trade_amount = min(MAX_TRADE_AMOUNT / current_price, usdt_balance / current_price)
+    current_price = fetch_price()
+    if not current_price:
+        print("❌ Unable to fetch price, retrying...")
+        return False
 
-    # Place buy orders 1% and 2% below the current price
-    for spread in BUY_SPREAD:
-        buy_price = current_price * (1 - spread)
-        buy_amount = MAX_TRADE_AMOUNT / buy_price
-        place_limit_order("buy", PAIR_USDT, buy_price, buy_amount)
+    # Calculate ZON quantity to buy
+    quantity_to_buy = TRADE_SIZE_USDT / current_price
+    if quantity_to_buy < Decimal("1.00"):  # Bitrue min order restriction
+        print(f"⚠️ Order size is too small ({quantity_to_buy} ZON), increasing to 1 ZON minimum.")
+        quantity_to_buy = Decimal("1.00")
 
-    # Market Buy
-    place_market_order("buy", PAIR_USDT, trade_amount)
+    try:
+        order = bitrue.create_market_buy_order(PAIR_USDT, float(quantity_to_buy))
+        print(f"✅ Bought {quantity_to_buy:.2f} ZON at market price.")
+        return True
+    except Exception as e:
+        print(f"❌ Error placing market buy order: {e}")
+        return False
 
 def main():
-    """Main bot loop."""
+    """Main execution loop."""
+    print("🔄 Cancelling all open orders before starting...")
+    cancel_all_orders()  # Cancel all orders before starting
+
     while True:
-        try:
-            # Fetch balances
-            usdt_balance = fetch_balance("USDT")
-            print(f"USDT Balance: {usdt_balance:.2f}")
+        success = place_market_buy()
+        if not success:
+            break
+        time.sleep(RETRY_DELAY)
 
-            # Check reserve threshold
-            if usdt_balance < RESERVE_THRESHOLD:
-                print("Reserve balance too low! Pausing the bot.")
-                break
-
-            # Fetch current price
-            current_price = fetch_price(PAIR_USDT)
-            print(f"Current price of {PAIR_USDT}: {current_price:.4f} USDT")
-
-            # Execute buy strategy
-            execute_buy_strategy(current_price, usdt_balance)
-
-            # Delay before the next iteration
-            time.sleep(RETRY_DELAY)
-
-        except Exception as e:
-            print(f"Error: {e}")
-            time.sleep(RETRY_DELAY)
-
-if __name__ == "__main__":  
+if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
-# import time
-# import ccxt
-# from decimal import Decimal
-
-# # Configuration
-# API_KEY = "cc2c9d8f7883be5a649d62ab8431fddf5bfb023956ec42eaa5cb133d6f85af9b"
-# API_SECRET = "90eefc78e753a738d8477dd2e48ba82582dd8d91354feadc75b94f0d899d1093"
-# EXCHANGE = "bitrue"
-# PAIR_USDT = "ZON/USDT"
-# BUY_SPREAD = [Decimal("0.01"), Decimal("0.02")]  # 1% and 2% below market price
-# TRADE_AMOUNT_USDT = Decimal("10.00")  # Fixed trade size of $10
-# RETRY_DELAY = 5  # Delay in seconds between cycles
-
-# # Initialize exchange
-# bitrue = ccxt.bitrue({
-#     "apiKey": API_KEY,
-#     "secret": API_SECRET,
-# })
-
-# def fetch_price(pair):
-#     """Fetch the current price of the pair."""
-#     ticker = bitrue.fetch_ticker(pair)
-#     return Decimal(str(ticker["last"]))
-
-# def fetch_balance(currency):
-#     """Fetch the balance of the specified currency."""
-#     balance = bitrue.fetch_balance()
-#     return Decimal(str(balance["free"][currency]))
-
-# def place_limit_order(order_type, pair, price, amount):
-#     """Place a limit order (buy)."""
-#     if amount < Decimal("0.0001"):
-#         print("Amount too small, skipping order.")
-#         return
-#     try:
-#         if order_type == "buy":
-#             bitrue.create_limit_buy_order(pair, float(amount), float(price))
-#             print(f"Buy order placed: {amount} ZON at {price:.4f} USDT")
-#     except Exception as e:
-#         print(f"Error placing {order_type} order: {e}")
-
-# def main():
-#     """Main bot loop."""
-#     while True:
-#         try:
-#             # Fetch balances
-#             usdt_balance = fetch_balance("USDT")
-#             print(f"USDT Balance: {usdt_balance:.2f}")
-
-#             # Ensure sufficient USDT balance
-#             if usdt_balance < TRADE_AMOUNT_USDT:
-#                 print("Insufficient USDT balance. Pausing the bot.")
-#                 break
-
-#             # Fetch current price
-#             current_price = fetch_price(PAIR_USDT)
-#             print(f"Current price of {PAIR_USDT}: {current_price:.4f} USDT")
-            
-            
-            
-            
-            
